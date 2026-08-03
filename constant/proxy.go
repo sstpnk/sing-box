@@ -25,6 +25,7 @@ const (
 	TypeTUIC         = "tuic"
 	TypeHysteria2    = "hysteria2"
 	TypeTailscale    = "tailscale"
+	TypeAwg          = "awg"
 	TypeDERP         = "derp"
 	TypeResolved     = "resolved"
 	TypeSSMAPI       = "ssm-api"
@@ -65,6 +66,8 @@ func ProxyDisplayName(proxyType string) string {
 		return "Naive"
 	case TypeWireGuard:
 		return "WireGuard"
+	case TypeAwg:
+		return "Awg"
 	case TypeHysteria:
 		return "Hysteria"
 	case TypeTor:
