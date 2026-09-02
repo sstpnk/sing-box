@@ -6,8 +6,8 @@ import (
 	"net/netip"
 	"syscall"
 
-	"github.com/amnezia-vpn/amneziawg-go/tun"
-	"github.com/amnezia-vpn/amneziawg-go/tun/netstack"
+	"github.com/amnezia-vpn/amneziawg-go/v3/tun"
+	"github.com/amnezia-vpn/amneziawg-go/v3/tun/netstack"
 	"github.com/sagernet/sing/common/metadata"
 )
 

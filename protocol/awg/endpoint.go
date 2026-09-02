@@ -179,6 +179,37 @@ func genIpcConfig(opts option.AwgEndpointOptions, resolvePeer func(domain string
 	if opts.I5 != "" {
 		s += "\ni5=" + opts.I5
 	}
+	if opts.HeaderProtectionKey != "" {
+		headerProtectionKey, err := decodeAwgKey(opts.HeaderProtectionKey)
+		if err != nil {
+			return "", E.Cause(err, "decode header protection key")
+		}
+		s += "\nheader_protection_key=" + headerProtectionKey
+	}
+	if opts.ContentPaddingAddition != "" {
+		s += "\ncontent_padding_addition=" + opts.ContentPaddingAddition
+	}
+	if opts.RekeyAfterTime != "" {
+		s += "\nrekey_after_time=" + opts.RekeyAfterTime
+	}
+	if opts.RekeyTimeout != "" {
+		s += "\nrekey_timeout=" + opts.RekeyTimeout
+	}
+	if opts.RejectAfterTime != "" {
+		s += "\nreject_after_time=" + opts.RejectAfterTime
+	}
+	if opts.KeepaliveTimeout != "" {
+		s += "\nkeepalive_timeout=" + opts.KeepaliveTimeout
+	}
+	if opts.MaxHandshakeAttempts != "" {
+		s += "\nmax_handshake_attempts=" + opts.MaxHandshakeAttempts
+	}
+	if opts.RandomTrailers {
+		s += "\nrandom_trailers=true"
+	}
+	if opts.DisableCookies {
+		s += "\ndisable_cookies=true"
+	}
 
 	for _, peer := range opts.Peers {
 		publicKeyBytes, err := base64.StdEncoding.DecodeString(peer.PublicKey)
@@ -209,14 +240,44 @@ func genIpcConfig(opts option.AwgEndpointOptions, resolvePeer func(domain string
 			}
 			s += "\nendpoint=" + endpointAddr + ":" + format.ToString(peer.Port)
 		}
-		if peer.PersistentKeepaliveInterval != 0 {
-			s += "\npersistent_keepalive_interval=" + format.ToString(peer.PersistentKeepaliveInterval)
+		if peer.PersistentKeepaliveInterval != "" {
+			s += "\npersistent_keepalive_interval=" + peer.PersistentKeepaliveInterval
 		}
 		for _, allowedIp := range peer.AllowedIPs {
 			s += "\nallowed_ip=" + allowedIp.String()
 		}
 	}
 	return s, nil
+}
+
+func decodeAwgKey(key string) (string, error) {
+	if len(key) == 64 {
+		keyBytes, err := hex.DecodeString(key)
+		if err == nil && len(keyBytes) == 32 {
+			return key, nil
+		}
+	}
+	if keyBytes, err := base64.StdEncoding.DecodeString(key); err == nil {
+		if len(keyBytes) != 32 {
+			return "", E.New("invalid key length: ", len(keyBytes))
+		}
+		return hex.EncodeToString(keyBytes), nil
+	}
+	if keyBytes, err := base64.RawStdEncoding.DecodeString(key); err == nil {
+		if len(keyBytes) != 32 {
+			return "", E.New("invalid key length: ", len(keyBytes))
+		}
+		return hex.EncodeToString(keyBytes), nil
+	}
+
+	keyBytes, err := hex.DecodeString(key)
+	if err != nil {
+		return "", err
+	}
+	if len(keyBytes) != 32 {
+		return "", E.New("invalid key length: ", len(keyBytes))
+	}
+	return key, nil
 }
 
 func (e *Endpoint) NewPacketConnectionEx(ctx context.Context, conn N.PacketConn, source M.Socksaddr, destination M.Socksaddr, onClose N.CloseHandlerFunc) {
